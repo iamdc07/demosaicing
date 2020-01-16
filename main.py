@@ -8,8 +8,9 @@ np.set_printoptions(threshold=sys.maxsize)
 def load_image():
     img = cv2.imread('image_set/oldwell_mosaic.bmp', 0)
     coloured_img = cv2.imread('image_set/oldwell.jpg')
+    # img = cv2.imread('image_set/crayons_mosaic.bmp', 0)
+    # coloured_img = cv2.imread('image_set/crayons.jpg')
     print(img.dtype)
-    cv2.imshow("Crayons", img)
     b_channel, g_channel, r_channel = make_channels(img)
     generated_img_b, generated_img_g, generated_img_r = perform_conv(b_channel, g_channel, r_channel)
 
@@ -18,7 +19,9 @@ def load_image():
     cv2.imshow('Result', numpy_concat)
     cv2.waitKey(10000)
 
-    squared_differences()
+    difference = squared_differences(coloured_img, generated_img)
+    cv2.imshow("Difference", difference)
+    cv2.waitKey()
 
     # get_bayer_array(img)
     # cv2.waitKey(150000)
