@@ -6,10 +6,12 @@ np.set_printoptions(threshold=sys.maxsize)
 
 
 def load_image():
-    img = cv2.imread('image_set/oldwell_mosaic.bmp', 0)
-    coloured_img = cv2.imread('image_set/oldwell.jpg')
-    # img = cv2.imread('image_set/crayons_mosaic.bmp', 0)
-    # coloured_img = cv2.imread('image_set/crayons.jpg')
+    # img = cv2.imread('image_set/oldwell_mosaic.bmp', 0)
+    # coloured_img = cv2.imread('image_set/oldwell.jpg')
+    img = cv2.imread('image_set/crayons_mosaic.bmp', 0)
+    coloured_img = cv2.imread('image_set/crayons.jpg')
+    # img = cv2.imread('image_set/pencils_mosaic.bmp', 0)
+    # coloured_img = cv2.imread('image_set/pencils.jpg')
     print(img.dtype)
     b_channel, g_channel, r_channel = make_channels(img)
     generated_img_b, generated_img_g, generated_img_r = perform_conv(b_channel, g_channel, r_channel)
@@ -21,15 +23,15 @@ def load_image():
 
     difference = squared_differences(coloured_img, generated_img)
     cv2.imshow("Difference", difference)
-    cv2.waitKey()
+    cv2.waitKey(10000)
 
-    # get_bayer_array(img)
-    # cv2.waitKey(150000)
-    # b_pixel, g_pixel, r_pixel = img_gray[200, 50]
-    # print('B={}, G={}, R={}'.format(b_pixel, g_pixel, r_pixel))
-    # b_channel, g_channel, r_channel  = split_channels(img)
-    # kernel = fetch_kernel()
-    # generated_image = perform_conv(b_channel, g_channel, r_channel, kernel)
+    freeman_img = freeman(generated_img_b, generated_img_g, generated_img_r)
+    numpy_concat = np.concatenate((freeman_img, generated_img), axis=1)
+    cv2.imshow('Freeman Method', numpy_concat)
+
+    difference = squared_differences(freeman_img, generated_img)
+    cv2.imshow("Difference new", difference)
+    cv2.waitKey()
 
 
 def perform_conv(b_channel, g_channel, r_channel):
@@ -70,8 +72,22 @@ def make_channels(source_image):
     b_channel = cv2.bitwise_and(source_image, source_image, mask=fetch_channel_mask(0, img_shape))
     g_channel = cv2.bitwise_and(source_image, source_image, mask=fetch_channel_mask(1, img_shape))
     r_channel = cv2.bitwise_and(source_image, source_image, mask=fetch_channel_mask(2, img_shape))
-
+    print(b_channel)
     return b_channel, g_channel, r_channel
+
+
+def freeman(b_channel, g_channel, r_channel):
+    g_r = g_channel - r_channel
+    b_r = b_channel - r_channel
+
+    g_r = cv2.medianBlur(g_r, 1)
+    b_r = cv2.medianBlur(b_r, 1)
+
+    g_r = g_r + r_channel
+    b_r = b_r + r_channel
+
+    freeman_img = cv2.merge((b_r, g_r, r_channel))
+    return freeman_img
 
 
 def fetch_channel_mask(color_index, img_shape):
