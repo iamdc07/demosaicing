@@ -6,10 +6,10 @@ np.set_printoptions(threshold=sys.maxsize)
 
 
 def load_image():
-    # img = cv2.imread('image_set/oldwell_mosaic.bmp', 0)
-    # coloured_img = cv2.imread('image_set/oldwell.jpg')
-    img = cv2.imread('image_set/crayons_mosaic.bmp', 0)
-    coloured_img = cv2.imread('image_set/crayons.jpg')
+    img = cv2.imread('image_set/oldwell_mosaic.bmp', 0)
+    coloured_img = cv2.imread('image_set/oldwell.jpg')
+    # img = cv2.imread('image_set/crayons_mosaic.bmp', 0)
+    # coloured_img = cv2.imread('image_set/crayons.jpg')
     # img = cv2.imread('image_set/pencils_mosaic.bmp', 0)
     # coloured_img = cv2.imread('image_set/pencils.jpg')
     print(img.dtype)
@@ -17,6 +17,14 @@ def load_image():
     generated_img_b, generated_img_g, generated_img_r = perform_conv(b_channel, g_channel, r_channel)
 
     generated_img = cv2.merge((generated_img_b, generated_img_g, generated_img_r))
+    # kernel1 = (np.array([[0, 0, 0],
+    #                      [0, 2, 0],
+    #                      [0, 0, 0]], np.uint8))
+    # kernel2 = (np.array([[0, 1, 0],
+    #                     [1, 1, 1],
+    #                     [0, 1, 0]], np.uint8))/4
+    # kernel = kernel1 - kernel2
+    # generated_img = cv2.filter2D(generated_img, -1, kernel=kernel)
     numpy_concat = np.concatenate((coloured_img, generated_img), axis=1)
     cv2.imshow('Result', numpy_concat)
     cv2.waitKey(10000)
@@ -37,30 +45,59 @@ def load_image():
 
 
 def perform_conv(b_channel, g_channel, r_channel):
-    generated_img_b = cv2.filter2D(b_channel, -1, kernel=fetch_kernel(0))
-    generated_img_g = cv2.filter2D(g_channel, -1, kernel=fetch_kernel(1))
-    generated_img_r = cv2.filter2D(r_channel, -1, kernel=fetch_kernel(2))
+    img_shape = b_channel.shape
+    generated_img_b = np.zeros((img_shape), np.uint8)
+    generated_img_g = np.zeros((img_shape), np.uint8)
+    generated_img_r = np.zeros((img_shape), np.uint8)
 
-    print(generated_img_b.dtype)
+    cv2.filter2D(b_channel, dst=generated_img_b, ddepth=-1, kernel=fetch_kernel(0))
+    # cv2.filter2D(generated_img_b, dst=generated_img_b, ddepth=-1, kernel=fetch_kernel(100))
+    cv2.filter2D(g_channel,dst=generated_img_g, ddepth=-1, kernel=fetch_kernel(1))
+    # cv2.filter2D(generated_img_g, dst=generated_img_g, ddepth=-1, kernel=fetch_kernel(-1))
+    cv2.filter2D(r_channel, dst=generated_img_r, ddepth=-1, kernel=fetch_kernel(2))
+
+    # cv2.filter2D(b_channel, dst=generated_img_b, ddepth=-1, kernel=fetch_kernel(100))
+    # cv2.filter2D(generated_img_b, dst=generated_img_b, ddepth=-1, kernel=fetch_kernel(0))
+    # cv2.filter2D(g_channel, dst=generated_img_g, ddepth=-1, kernel=fetch_kernel(100))
+    # cv2.filter2D(generated_img_g, dst=generated_img_g, ddepth=-1, kernel=fetch_kernel(1))
+    # cv2.filter2D(r_channel, dst=generated_img_r, ddepth=-1, kernel=fetch_kernel(2))
+
+    # print(generated_img_b.dtype)
+
     return generated_img_b, generated_img_g, generated_img_r
 
 
 def fetch_kernel(kernel_index):
     if kernel_index == 0:
-        kernel = (np.array([[0, 1, 0],
-                           [1, 2, 1],
-                           [0, 1, 0]], np.uint8))
-        kernel = np.divide(kernel, 2)
+        # b
+        kernel = (np.array([[1, 2, 1],
+                            [2, 4, 2],
+                            [1, 2, 1]], np.uint8))
+        kernel = np.divide(kernel, 4)
     elif kernel_index == 1:
-        kernel = (np.array([[0, 1, 0],
-                           [1, 2, 1],
-                           [0, 1, 0]], np.uint8))
-        kernel = np.divide(kernel, 2)
+        # g
+        kernel = (np.array([[1, 2, 1],
+                            [2, 4, 2],
+                            [1, 2, 1]], np.uint8))
+        kernel = np.divide(kernel, 4)
     elif kernel_index == 2:
+        # r
         kernel = (np.array([[0, 1, 0],
-                           [1, 2, 1],
+                           [1, 4, 1],
                            [0, 1, 0]], np.uint8))
         kernel = np.divide(kernel, 4)
+    elif kernel_index == 100:
+        # b2 g2
+        kernel = (np.array([[1, 0, 1],
+                           [0, 0, 0],
+                           [1, 0, 1]], np.uint8))
+        kernel = np.divide(kernel, 4)
+    # elif kernel_index == -1:
+    #     g2
+        # kernel = (np.array([[1, 0, 1],
+        #                    [0, 0, 0],
+        #                    [1, 0, 1]], np.uint8))
+        # kernel = np.divide(kernel, 4)
 
     print(kernel.dtype)
 
@@ -68,8 +105,8 @@ def fetch_kernel(kernel_index):
 
 
 def squared_differences(coloured_img, generated_img):
-    squared_differences = np.square(coloured_img) - np.square(generated_img)
-    square_root = np.sqrt(squared_differences).astype(np.uint8)
+    differences = np.square(coloured_img) - np.square(generated_img)
+    square_root = np.sqrt(differences).astype(np.uint8)
 
     return square_root
 
