@@ -29,6 +29,8 @@ def load_image():
     numpy_concat = np.concatenate((freeman_img, generated_img), axis=1)
     cv2.imshow('Freeman Method', numpy_concat)
 
+    # print(np.array_equal(freeman_img, generated_img))
+
     difference = squared_differences(freeman_img, generated_img)
     cv2.imshow("Difference new", difference)
     cv2.waitKey()
@@ -39,6 +41,7 @@ def perform_conv(b_channel, g_channel, r_channel):
     generated_img_g = cv2.filter2D(g_channel, -1, kernel=fetch_kernel(1))
     generated_img_r = cv2.filter2D(r_channel, -1, kernel=fetch_kernel(2))
 
+    print(generated_img_b.dtype)
     return generated_img_b, generated_img_g, generated_img_r
 
 
@@ -46,15 +49,20 @@ def fetch_kernel(kernel_index):
     if kernel_index == 0:
         kernel = (np.array([[0, 1, 0],
                            [1, 2, 1],
-                           [0, 1, 0]], np.uint8))/2
+                           [0, 1, 0]], np.uint8))
+        kernel = np.divide(kernel, 2)
     elif kernel_index == 1:
         kernel = (np.array([[0, 1, 0],
                            [1, 2, 1],
-                           [0, 1, 0]], np.uint8))/2
+                           [0, 1, 0]], np.uint8))
+        kernel = np.divide(kernel, 2)
     elif kernel_index == 2:
         kernel = (np.array([[0, 1, 0],
                            [1, 2, 1],
-                           [0, 1, 0]], np.uint8))/4
+                           [0, 1, 0]], np.uint8))
+        kernel = np.divide(kernel, 4)
+
+    print(kernel.dtype)
 
     return kernel
 
@@ -103,6 +111,8 @@ def fetch_channel_mask(color_index, img_shape):
     elif color_index == 2:
         channel_mask[::2, 1::2] = 1
         channel_mask[1::2, ::2] = 1
+
+    print(channel_mask.dtype)
 
     return channel_mask
 
