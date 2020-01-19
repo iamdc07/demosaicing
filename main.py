@@ -30,25 +30,26 @@ def load_image():
     # print(generated_img)
 
     difference = squared_differences(coloured_img, generated_img)
-    # roi = difference[235:290, 150:170]
-    # cv2.imshow("roi", roi)
-    # roi = img[50:180, 20:300]
-    # cv2.imshow("roi", roi)
-    # print(generated_img[235:255, 150:160])
 
     cv2.imshow('Result', numpy_concat)
     cv2.imshow("Difference", difference)
-    cv2.waitKey()
+    cv2.waitKey(10000)
 
-    # freeman_img = freeman(generated_img_b, generated_img_g, generated_img_r)
-    # numpy_concat = np.concatenate((freeman_img, generated_img), axis=1)
-    # cv2.imshow('Freeman Method', numpy_concat)
-    #
-    # # print(np.array_equal(freeman_img, generated_img))
-    #
-    # difference = squared_differences(freeman_img, generated_img)
-    # cv2.imshow("Difference new", difference)
-    # cv2.waitKey()
+    roi = difference[150:200, 100:150]
+    cv2.imshow("Close up patch of Part 1", roi)
+
+    freeman_img = freeman(generated_img_b, generated_img_g, generated_img_r)
+    numpy_concat = np.concatenate((freeman_img, generated_img), axis=1)
+    cv2.imshow('Freeman Method', numpy_concat)
+
+    # print(np.array_equal(freeman_img, generated_img))
+
+    difference = squared_differences(coloured_img, freeman_img)
+    cv2.imshow("Difference new", difference)
+
+    roi = difference[150:200, 100:150]
+    cv2.imshow("Close up patch of Part 2", roi)
+    cv2.waitKey()
 
 
 def perform_conv(b_channel, g_channel, r_channel):
@@ -186,14 +187,14 @@ def make_channels(source_image):
 
 
 def freeman(b_channel, g_channel, r_channel):
-    g_r = g_channel - r_channel
-    b_r = b_channel - r_channel
+    g_r = np.subtract(g_channel, r_channel)
+    b_r = np.subtract(b_channel, r_channel)
 
     g_r = cv2.medianBlur(g_r, 1)
     b_r = cv2.medianBlur(b_r, 1)
 
-    g_r = g_r + r_channel
-    b_r = b_r + r_channel
+    g_r = np.add(g_r, r_channel)
+    b_r = np.add(b_r, r_channel)
 
     freeman_img = cv2.merge((b_r, g_r, r_channel))
     return freeman_img
