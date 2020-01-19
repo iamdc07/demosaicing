@@ -6,13 +6,14 @@ np.set_printoptions(threshold=sys.maxsize)
 
 
 def load_image():
-    img = cv2.imread('image_set/oldwell_mosaic.bmp', 0)
-    coloured_img = cv2.imread('image_set/oldwell.jpg')
+    # img = cv2.imread('image_set/oldwell_mosaic.bmp', 0)
+    # coloured_img = cv2.imread('image_set/oldwell.jpg')
     # img = cv2.imread('image_set/crayons_mosaic.bmp', 0)
     # coloured_img = cv2.imread('image_set/crayons.jpg')
-    # img = cv2.imread('image_set/pencils_mosaic.bmp', 0)
-    # coloured_img = cv2.imread('image_set/pencils.jpg')
-    print(img.dtype)
+    img = cv2.imread('image_set/pencils_mosaic.bmp', 0)
+    coloured_img = cv2.imread('image_set/pencils.jpg')
+    # print(img.dtype)
+    b,g,r = cv2.split(coloured_img)
     b_channel, g_channel, r_channel = make_channels(img)
     generated_img_b, generated_img_g, generated_img_r = perform_conv(b_channel, g_channel, r_channel)
 
@@ -20,28 +21,34 @@ def load_image():
     # kernel1 = (np.array([[0, 0, 0],
     #                      [0, 2, 0],
     #                      [0, 0, 0]], np.uint8))
-    # kernel2 = (np.array([[0, 1, 0],
+    # kernel2 = (np.array([[1, 1, 1],
     #                     [1, 1, 1],
-    #                     [0, 1, 0]], np.uint8))/4
+    #                     [1, 1, 1]], np.uint8))/9
     # kernel = kernel1 - kernel2
     # generated_img = cv2.filter2D(generated_img, -1, kernel=kernel)
     numpy_concat = np.concatenate((coloured_img, generated_img), axis=1)
-    cv2.imshow('Result', numpy_concat)
-    cv2.waitKey(10000)
+    # print(generated_img)
 
     difference = squared_differences(coloured_img, generated_img)
+    # roi = difference[235:290, 150:170]
+    # cv2.imshow("roi", roi)
+    # roi = img[50:180, 20:300]
+    # cv2.imshow("roi", roi)
+    # print(generated_img[235:255, 150:160])
+
+    cv2.imshow('Result', numpy_concat)
     cv2.imshow("Difference", difference)
-    cv2.waitKey(10000)
-
-    freeman_img = freeman(generated_img_b, generated_img_g, generated_img_r)
-    numpy_concat = np.concatenate((freeman_img, generated_img), axis=1)
-    cv2.imshow('Freeman Method', numpy_concat)
-
-    # print(np.array_equal(freeman_img, generated_img))
-
-    difference = squared_differences(freeman_img, generated_img)
-    cv2.imshow("Difference new", difference)
     cv2.waitKey()
+
+    # freeman_img = freeman(generated_img_b, generated_img_g, generated_img_r)
+    # numpy_concat = np.concatenate((freeman_img, generated_img), axis=1)
+    # cv2.imshow('Freeman Method', numpy_concat)
+    #
+    # # print(np.array_equal(freeman_img, generated_img))
+    #
+    # difference = squared_differences(freeman_img, generated_img)
+    # cv2.imshow("Difference new", difference)
+    # cv2.waitKey()
 
 
 def perform_conv(b_channel, g_channel, r_channel):
@@ -50,11 +57,25 @@ def perform_conv(b_channel, g_channel, r_channel):
     generated_img_g = np.zeros((img_shape), np.uint8)
     generated_img_r = np.zeros((img_shape), np.uint8)
 
-    cv2.filter2D(b_channel, dst=generated_img_b, ddepth=-1, kernel=fetch_kernel(0))
-    # cv2.filter2D(generated_img_b, dst=generated_img_b, ddepth=-1, kernel=fetch_kernel(100))
-    cv2.filter2D(g_channel,dst=generated_img_g, ddepth=-1, kernel=fetch_kernel(1))
-    # cv2.filter2D(generated_img_g, dst=generated_img_g, ddepth=-1, kernel=fetch_kernel(-1))
+    generated_img_b2 = np.zeros((img_shape), np.uint8)
+    generated_img_g2 = np.zeros((img_shape), np.uint8)
+    generated_img_r2 = np.zeros((img_shape), np.uint8)
+
+    cv2.filter2D(g_channel, dst=generated_img_g, ddepth=-1, kernel=fetch_kernel(1))
     cv2.filter2D(r_channel, dst=generated_img_r, ddepth=-1, kernel=fetch_kernel(2))
+    cv2.filter2D(b_channel, dst=generated_img_b, ddepth=-1, kernel=fetch_kernel(0))
+    # cv2.filter2D(generated_img_b, dst=generated_img_b2, ddepth=-1, kernel=fetch_kernel(100))
+
+    # cv2.filter2D(generated_img_g, dst=generated_img_g2, ddepth=-1, kernel=fetch_kernel(100))
+
+
+    # generated_img_b = np.round(generated_img_b, 0)
+    # generated_img_g = np.round(generated_img_g, 0)
+    # generated_img_r = np.round(generated_img_r, 0)
+
+    # generated_img_b = np.uint8(generated_img_b)
+    # generated_img_g = np.uint8(generated_img_g)
+    # generated_img_r = np.uint8(generated_img_r)
 
     # cv2.filter2D(b_channel, dst=generated_img_b, ddepth=-1, kernel=fetch_kernel(100))
     # cv2.filter2D(generated_img_b, dst=generated_img_b, ddepth=-1, kernel=fetch_kernel(0))
@@ -62,9 +83,49 @@ def perform_conv(b_channel, g_channel, r_channel):
     # cv2.filter2D(generated_img_g, dst=generated_img_g, ddepth=-1, kernel=fetch_kernel(1))
     # cv2.filter2D(r_channel, dst=generated_img_r, ddepth=-1, kernel=fetch_kernel(2))
 
-    # print(generated_img_b.dtype)
+    # print(generated_img_b)
 
     return generated_img_b, generated_img_g, generated_img_r
+
+
+# def fetch_kernel(kernel_index):
+#     if kernel_index == 0:
+#         # b
+#         kernel = (np.array([[0, 0, 0],
+#                             [1, 2, 1],
+#                             [0, 0, 0]], np.uint8))
+#         kernel = np.divide(kernel, 2)
+#     elif kernel_index == 1:
+#         # g
+#         kernel = (np.array([[0, 0, 0],
+#                             [1, 2, 1],
+#                             [0, 0, 0]], np.uint8))
+#         kernel = np.divide(kernel, 2)
+#     elif kernel_index == 2:
+#         # r
+#         kernel = (np.array([[0, 1, 0],
+#                            [1, 4, 1],
+#                            [0, 1, 0]], np.uint8))
+#         kernel = np.divide(kernel, 4)
+#     elif kernel_index == 100:
+#         # b2 g2
+#         kernel = (np.array([[1, 1, 1],
+#                            [0, 6, 0],
+#                            [1, 1, 1]], np.uint8))
+#         kernel = np.divide(kernel, 6)
+#     # elif kernel_index == -1:
+#     #     g2
+#         # kernel = (np.array([[1, 0, 1],
+#         #                    [0, 0, 0],
+#         #                    [1, 0, 1]], np.uint8))
+#         # kernel = np.divide(kernel, 4)
+#
+#
+#     # kernel = kernel.astype(np.uint8)
+#     print("KERNEL:", kernel)
+#     print(kernel.dtype)
+#
+#     return kernel
 
 
 def fetch_kernel(kernel_index):
@@ -86,12 +147,12 @@ def fetch_kernel(kernel_index):
                            [1, 4, 1],
                            [0, 1, 0]], np.uint8))
         kernel = np.divide(kernel, 4)
-    elif kernel_index == 100:
-        # b2 g2
-        kernel = (np.array([[1, 0, 1],
-                           [0, 0, 0],
-                           [1, 0, 1]], np.uint8))
-        kernel = np.divide(kernel, 4)
+    # elif kernel_index == 100:
+    #     # b2 g2
+    #     kernel = (np.array([[1, 0, 1],
+    #                        [0, 0, 0],
+    #                        [1, 0, 1]], np.uint8))
+    #     kernel = np.divide(kernel, 4)
     # elif kernel_index == -1:
     #     g2
         # kernel = (np.array([[1, 0, 1],
@@ -99,16 +160,19 @@ def fetch_kernel(kernel_index):
         #                    [1, 0, 1]], np.uint8))
         # kernel = np.divide(kernel, 4)
 
+    # kernel = kernel.astype(np.uint8)
+    print("KERNEL:", kernel)
     print(kernel.dtype)
+
 
     return kernel
 
 
 def squared_differences(coloured_img, generated_img):
-    differences = np.square(coloured_img) - np.square(generated_img)
-    square_root = np.sqrt(differences).astype(np.uint8)
+    differences = coloured_img - generated_img
+    square_root = np.sqrt(np.square(differences)).astype(np.uint8)
 
-    return square_root
+    return np.square(differences)
 
 
 def make_channels(source_image):
@@ -117,7 +181,7 @@ def make_channels(source_image):
     b_channel = cv2.bitwise_and(source_image, source_image, mask=fetch_channel_mask(0, img_shape))
     g_channel = cv2.bitwise_and(source_image, source_image, mask=fetch_channel_mask(1, img_shape))
     r_channel = cv2.bitwise_and(source_image, source_image, mask=fetch_channel_mask(2, img_shape))
-    print(b_channel)
+    # print(g_channel)
     return b_channel, g_channel, r_channel
 
 
@@ -149,7 +213,6 @@ def fetch_channel_mask(color_index, img_shape):
         channel_mask[::2, 1::2] = 1
         channel_mask[1::2, ::2] = 1
 
-    print(channel_mask.dtype)
 
     return channel_mask
 
