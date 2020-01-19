@@ -89,46 +89,6 @@ def perform_conv(b_channel, g_channel, r_channel):
     return generated_img_b, generated_img_g, generated_img_r
 
 
-# def fetch_kernel(kernel_index):
-#     if kernel_index == 0:
-#         # b
-#         kernel = (np.array([[0, 0, 0],
-#                             [1, 2, 1],
-#                             [0, 0, 0]], np.uint8))
-#         kernel = np.divide(kernel, 2)
-#     elif kernel_index == 1:
-#         # g
-#         kernel = (np.array([[0, 0, 0],
-#                             [1, 2, 1],
-#                             [0, 0, 0]], np.uint8))
-#         kernel = np.divide(kernel, 2)
-#     elif kernel_index == 2:
-#         # r
-#         kernel = (np.array([[0, 1, 0],
-#                            [1, 4, 1],
-#                            [0, 1, 0]], np.uint8))
-#         kernel = np.divide(kernel, 4)
-#     elif kernel_index == 100:
-#         # b2 g2
-#         kernel = (np.array([[1, 1, 1],
-#                            [0, 6, 0],
-#                            [1, 1, 1]], np.uint8))
-#         kernel = np.divide(kernel, 6)
-#     # elif kernel_index == -1:
-#     #     g2
-#         # kernel = (np.array([[1, 0, 1],
-#         #                    [0, 0, 0],
-#         #                    [1, 0, 1]], np.uint8))
-#         # kernel = np.divide(kernel, 4)
-#
-#
-#     # kernel = kernel.astype(np.uint8)
-#     print("KERNEL:", kernel)
-#     print(kernel.dtype)
-#
-#     return kernel
-
-
 def fetch_kernel(kernel_index):
     if kernel_index == 0:
         # b
@@ -170,10 +130,27 @@ def fetch_kernel(kernel_index):
 
 
 def squared_differences(coloured_img, generated_img):
-    differences = coloured_img - generated_img
-    square_root = np.sqrt(np.square(differences)).astype(np.uint8)
+    d_b, d_g, d_r = cv2.split(generated_img)
+    b, g, r = cv2.split(coloured_img)
 
-    return np.square(differences)
+    difference1 = b - d_b
+    difference2 = g - d_g
+    difference3 = r - d_r
+
+    difference1 = np.square(difference1)
+    difference2 = np.square(difference2)
+    difference3 = np.square(difference3)
+
+    square_root1 = np.sqrt(difference1).astype(np.uint8)
+    square_root2 = np.sqrt(difference2).astype(np.uint8)
+    square_root3 = np.sqrt(difference3).astype(np.uint8)
+
+    difference_img = cv2.merge((square_root1, square_root2, square_root3))
+
+    # differences = coloured_img - generated_img
+    # square_root = np.sqrt(np.square(difference_img)).astype(np.uint8)
+
+    return difference_img
 
 
 def make_channels(source_image):
